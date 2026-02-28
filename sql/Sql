@@ -1,0 +1,107 @@
+-- firstly, i created a clean table
+
+CREATE TABLE customer_booking_clean AS
+SELECT 
+    *,
+    CASE 
+        WHEN sales_channel = 'Internet' THEN 'Internet'
+        WHEN sales_channel = 'Mobile' THEN 'Mobile'
+        ELSE 'Other'
+    END AS channel_group
+FROM customer_booking;
+
+-- Total booking 
+
+SELECT COUNT(*) AS total_bookings
+FROM customer_booking_clean;
+
+-- Total booking Channel Distribution
+
+SELECT 
+    channel_group,
+    COUNT(*) AS total_bookings,
+    ROUND(100 * COUNT(*) / 
+        (SELECT COUNT(*) FROM customer_booking_clean), 2) AS percentage
+FROM customer_booking_clean
+GROUP BY channel_group
+ORDER BY total_bookings DESC;
+
+
+-- Extra baggage Rate
+
+SELECT 
+    channel_group,
+    SUM(CASE
+        WHEN wants_extra_baggage = 1 THEN 1
+        ELSE 0
+    END) AS baggage_yes,
+    COUNT(*) AS total_bookings,
+    ROUND(100 * SUM(CASE
+                WHEN wants_extra_baggage = 1 THEN 1
+                ELSE 0
+            END) / COUNT(*),
+            2) AS baggage_rate
+FROM
+    customer_booking_clean
+GROUP BY channel_group;
+
+-- Extra Baggage Purchase Rate by Channel
+
+SELECT 
+    channel_group,
+    SUM(CASE
+        WHEN wants_extra_baggage = 1 THEN 1
+        ELSE 0
+    END) AS baggage_yes,
+    COUNT(*) AS total_bookings,
+    ROUND(100 * SUM(CASE
+                WHEN wants_extra_baggage = 1 THEN 1
+                ELSE 0
+            END) / COUNT(*),
+            2) AS baggage_rate
+FROM
+    customer_booking_clean
+GROUP BY channel_group;
+
+-- Preferred Seat Rate by Channel
+
+SELECT 
+    channel_group,
+    ROUND(100 * SUM(CASE
+                WHEN wants_preferred_seat = 1 THEN 1
+                ELSE 0
+            END) / COUNT(*),
+            2) AS seat_rate
+FROM
+    customer_booking_clean
+GROUP BY channel_group;
+
+-- Average Flight Duration by Channel
+
+SELECT 
+    channel_group,
+    ROUND(AVG(flight_duration), 1) AS avg_flight_duration
+FROM customer_booking_clean
+GROUP BY channel_group;
+
+
+-- Trip Type Distribution
+
+SELECT 
+    trip_type,
+    COUNT(*) AS total,
+    ROUND(100 * COUNT(*) / 
+        (SELECT COUNT(*) FROM customer_booking_clean), 2) AS percentage
+FROM customer_booking_clean
+GROUP BY trip_type
+ORDER BY total DESC;
+
+-- Add-On Behavior by Trip Type
+
+SELECT 
+    trip_type,
+    ROUND(100 * SUM(CASE WHEN wants_extra_baggage = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) AS baggage_rate,
+    ROUND(100 * SUM(CASE WHEN wants_preferred_seat = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) AS seat_rate
+FROM customer_booking_clean
+GROUP BY trip_type;
+
